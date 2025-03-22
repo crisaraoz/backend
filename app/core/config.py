@@ -10,16 +10,8 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # Database settings
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_PORT: str = "5432"
-    POSTGRES_DB: str = "kanban"
-    
-    @property
-    def DATABASE_URL(self) -> str:
-        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    # Reemplaza las configuraciones de la base de datos
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://bd-planning_owner:npg_JXqi4ph0wWVy@ep-young-firefly-a5ci8ouj-pooler.us-east-2.aws.neon.tech/bd-planning?sslmode=require")
 
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
@@ -28,4 +20,8 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    return Settings() 
+    return Settings()
+
+# Asegúrate de que DATABASE_URL no sea None
+if not Settings().DATABASE_URL:
+    raise ValueError("DATABASE_URL no está configurada en el archivo .env") 
