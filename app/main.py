@@ -1,18 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .core.config import get_settings
-from .api.endpoints import kanban
-from .models.base import Base
-from .database import engine
+from .api.endpoints.transcription import router as transcription_router
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
-
-settings = get_settings()
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description="API para la gestión de un tablero Kanban",
-    version=settings.VERSION,
+    title="AI Dev Tools API",
+    description="API para transcripción de videos de YouTube",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -21,18 +14,17 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://my-planning-crisaraozs-projects.vercel.app",
-        "https://my-planning-tawny.vercel.app",
         "http://localhost:3000",
-    ],  # Dominios específicos permitidos
+        "http://localhost:3001",
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
+# Include transcription router
 app.include_router(
-    kanban.router,
-    prefix=settings.API_V1_STR,
-    tags=["kanban"]
+    transcription_router,
+    prefix="/api/v1/transcription",
+    tags=["transcription"]
 ) 
