@@ -10,6 +10,20 @@ from .transcription import get_video_transcript, get_video_id
 # Cargar variables de entorno
 load_dotenv()
 
+# Mapeo de códigos de idioma a nombres completos
+LANGUAGE_MAP = {
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "zh": "Chinese",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "ru": "Russian"
+}
+
 # API URLs y configuración
 # Obtener la URL del API de las variables de entorno con un valor predeterminado
 # para desarrollo local (proxy)
@@ -54,8 +68,8 @@ async def generate_summary_from_text(
             "model": "qwen-max",
             "input": {
                 "messages": [
-                    {"role": "system", "content": "Eres un asistente experto en resumir contenido."},
-                    {"role": "user", "content": f"Genera un resumen del siguiente texto en español, máximo {max_length} tokens:\n\n{text}"}
+                    {"role": "system", "content": "You are an expert assistant in summarizing content."},
+                    {"role": "user", "content": f"Generate a summary of the following text in {LANGUAGE_MAP.get(language_code, 'English')}, maximum {max_length} tokens:\n\n{text}"}
                 ]
             },
             "parameters": {
