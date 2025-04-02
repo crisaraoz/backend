@@ -37,6 +37,18 @@ async def generate_summary_from_text(
         El resumen generado
     """
     try:
+        # Verificar la longitud del texto y truncar si es necesario
+        # Qwen API tiene un límite de 30,720 caracteres
+        if not text or len(text) == 0:
+            return "No hay texto para resumir."
+            
+        original_length = len(text)
+        max_api_length = 30000  # Un poco menos que el límite de 30,720 para margen de seguridad
+        
+        if len(text) > max_api_length:
+            print(f"Texto demasiado largo ({original_length} caracteres), truncando a {max_api_length} caracteres")
+            text = text[:max_api_length]
+            
         # Formato para el proxy local, como en el otro proyecto
         payload = {
             "model": "qwen-max",
@@ -63,6 +75,7 @@ async def generate_summary_from_text(
         print(f"URL: {QWEN_API_URL}")
         print(f"Encabezados: Content-Type={headers['Content-Type']}")
         print(f"Primeros 5 caracteres del token: {QWEN_API_KEY[:5]}...")
+        print(f"Longitud del texto a resumir: {len(text)} caracteres")
         print("Enviando solicitud a proxy local de Qwen API...")
         
         # Hacer la solicitud
@@ -85,30 +98,33 @@ async def generate_summary_from_text(
             print(f"Código de error: {response.status_code}")
             print(f"Respuesta completa: {response.text}")
             
-            # Si el error persiste, probar respaldos
-            if response.status_code == 401 or response.status_code == 403:
-                print("Error de autenticación con el proxy local, intentando métodos alternativos...")
-                
-                # Probar el método simulado de inmediato para no bloquear al usuario
-                raise Exception(f"No se pudo conectar al servicio de IA: {response.status_code}")
+            # Generar resumen fallback para cualquier error
+            error_msg = f"Error al obtener resumen (código {response.status_code}): {response.text}"
+            print(error_msg)
+            
+            # Crear un resumen fallback basado en las primeras líneas
+            return _generate_fallback_summary(text, error_msg)
         
     except Exception as e:
         # Si hay un error con Qwen, generar un resumen simulado
         print(f"Error al generar resumen con Qwen: {str(e)}")
-        
-        # Generar un resumen simple basado en las primeras líneas del texto
-        lines = text.split('\n')
-        summary_lines = []
-        total_lines = min(5, len(lines))
-        
-        for i in range(total_lines):
+        return _generate_fallback_summary(text, str(e))
+
+def _generate_fallback_summary(text: str, error_reason: str) -> str:
+    """Genera un resumen fallback basado en las primeras líneas del texto"""
+    lines = text.split('\n')
+    summary_lines = []
+    total_lines = min(5, len(lines))
+    
+    for i in range(total_lines):
+        if lines[i].strip():  # Solo agregar líneas no vacías
             summary_lines.append(lines[i])
-        
-        summary = "Resumen automático (debido a un error en la generación con IA):\n\n"
-        summary += "\n".join(summary_lines)
-        summary += "\n\n(Resumen parcial basado en las primeras líneas del texto)"
-        
-        return summary
+    
+    summary = f"Resumen automático (debido a un error en la generación con IA: {error_reason}):\n\n"
+    summary += "\n".join(summary_lines)
+    summary += "\n\n(Resumen parcial basado en las primeras líneas del texto)"
+    
+    return summary
 
 async def generate_summary(
     video_url: Optional[str] = None,
@@ -149,7 +165,11 @@ async def generate_summary(
             raise ValueError("Debe proporcionar una URL de video o una transcripción")
         
         if not transcript:
-            raise ValueError("No se pudo obtener texto para resumir")
+            return {
+                "summary": "No se pudo obtener texto para resumir. Es posible que el video no tenga transcripción disponible.",
+                "video_id": video_id,
+                "video_url": video_url
+            }
         
         # Generar el resumen del texto
         summary = await generate_summary_from_text(
@@ -164,4 +184,18 @@ async def generate_summary(
             "video_url": video_url
         }
     except Exception as e:
-        raise ValueError(f"Error al generar el resumen: {str(e)}") 
+        error_message = f"Error al generar el resumen: {str(e)}"
+        print(error_message)
+        
+        # Generar un resumen emergencia para evitar errores de validación
+        emergency_summary = "No se pudo generar el resumen debido a un error en el servidor. "
+        if transcription and len(transcription) > 0:
+            lines = transcription.split('\n')
+            if len(lines) > 0:
+                emergency_summary += f"El texto comienza con: {lines[0][:100]}..."
+        
+        return {
+            "summary": emergency_summary,
+            "video_id": video_id if video_id else "unknown",
+            "video_url": video_url
+        } 
