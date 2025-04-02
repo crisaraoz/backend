@@ -17,6 +17,13 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
+        "http://localhost",
+        "https://localhost:3000",
+        "https://localhost:3001",
+        "https://localhost",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "*",  # Allow all origins for testing - remove in production
     ],
     allow_credentials=True,
     allow_methods=["*"],
