@@ -32,7 +32,46 @@ Este es el backend para la aplicación Kanban Board, construido con FastAPI y Po
    pip install -r requirements.txt
    ```
 
-4. **Configurar la base de datos**
+4. **Configurar las variables de entorno**
+
+   Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+
+   ```
+   # Configuración de la base de datos
+   DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kanban
+
+   # API de Qwen
+   QWEN_API_KEY=tu_clave_api_aquí
+   
+   # Entorno de desarrollo (proxy local)
+   QWEN_API_URL=http://localhost:8010/api/v1/services/aigc/text-generation/generation
+   
+   # Para producción, comentar la línea anterior y descomentar esta:
+   # QWEN_API_URL=https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation
+   ```
+
+5. **Configuración del proxy para desarrollo local**
+
+   Para desarrollo local, es necesario ejecutar un proxy CORS para comunicarse con la API de Qwen:
+
+   ```bash
+   # Instalar el proxy
+   npm install -g local-cors-proxy
+
+   # Ejecutar el proxy (en una terminal separada)
+   npx local-cors-proxy --proxyUrl https://dashscope-intl.aliyuncs.com --port 8010 --proxyPartial ""
+   ```
+
+   También puedes usar los scripts incluidos:
+   ```bash
+   # En Linux/Mac
+   ./start_proxy.sh
+
+   # En Windows
+   .\start_proxy.ps1
+   ```
+
+6. **Configurar la base de datos**
    
    Asegúrate de tener PostgreSQL instalado y corriendo. Luego crea una base de datos:
    ```sql
@@ -73,72 +112,6 @@ La documentación interactiva está disponible en dos formatos:
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
-### Endpoints Disponibles
-
-#### Columnas (Columns)
-- `GET /api/v1/columns` - Obtener todas las columnas
-  ```bash
-  curl http://localhost:8000/api/v1/columns
-  ```
-
-- `POST /api/v1/columns` - Crear una nueva columna
-  ```bash
-  curl -X POST http://localhost:8000/api/v1/columns \
-    -H "Content-Type: application/json" \
-    -d '{"title": "Nueva Columna", "order": 1}'
-  ```
-
-#### Tareas (Tasks)
-- `GET /api/v1/tasks` - Obtener todas las tareas
-  ```bash
-  curl http://localhost:8000/api/v1/tasks
-  ```
-
-- `GET /api/v1/tasks?column_id={id}` - Obtener tareas de una columna específica
-  ```bash
-  curl http://localhost:8000/api/v1/tasks?column_id=1
-  ```
-
-- `POST /api/v1/tasks` - Crear una nueva tarea
-  ```bash
-  curl -X POST http://localhost:8000/api/v1/tasks \
-    -H "Content-Type: application/json" \
-    -d '{
-      "title": "Nueva Tarea",
-      "description": "Descripción de la tarea",
-      "column_id": 1,
-      "order": 0
-    }'
-  ```
-
-- `PUT /api/v1/tasks/{task_id}` - Actualizar una tarea
-  ```bash
-  curl -X PUT http://localhost:8000/api/v1/tasks/1 \
-    -H "Content-Type: application/json" \
-    -d '{
-      "title": "Tarea Actualizada",
-      "description": "Nueva descripción",
-      "column_id": 1,
-      "completed": true
-    }'
-  ```
-
-- `DELETE /api/v1/tasks/{task_id}` - Eliminar una tarea
-  ```bash
-  curl -X DELETE http://localhost:8000/api/v1/tasks/1
-  ```
-
-#### Etiquetas (Labels)
-- `GET /api/v1/labels` - Obtener todas las etiquetas
-  ```bash
-  curl http://localhost:8000/api/v1/labels
-  ```
-
-- `GET /api/v1/tasks/{task_id}/labels` - Obtener etiquetas de una tarea
-  ```bash
-  curl http://localhost:8000/api/v1/tasks/1/labels
-  ```
-
 ## Probar la API con Swagger UI
 
 1. Abre http://localhost:8000/docs en tu navegador
@@ -149,45 +122,3 @@ La documentación interactiva está disponible en dos formatos:
    - Completa los parámetros necesarios
    - Haz clic en "Execute"
    - Verás la respuesta del servidor
-
-## Estructura del Proyecto
-
-```
-backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── database.py
-│   │   ├── __init__.py
-│   │   └── kanban.py
-│   ├── core/
-│   │   ├── __init__.py
-│   │   └── config.py
-│   ├── api/
-│   │   ├── __init__.py
-│   │   └── endpoints/
-│   │       ├── __init__.py
-│   │       └── kanban.py
-│   └── models/
-│       ├── __init__.py
-│       ├── base.py
-│       └── kanban.py
-├── requirements.txt
-└── README.md
-```
-
-## Solución de Problemas
-
-1. **Error de conexión a la base de datos**
-   - Verifica que PostgreSQL esté corriendo
-   - Confirma que la base de datos "kanban" existe
-   - Revisa las credenciales en `app/core/config.py`
-
-2. **Error al crear las tablas**
-   - Asegúrate de que no existan las tablas previamente
-   - Si es necesario, elimina y vuelve a crear la base de datos
-
-3. **Error al ejecutar el servidor**
-   - Verifica que el entorno virtual esté activado
-   - Confirma que todas las dependencias están instaladas
-   - Revisa los logs para más detalles 
