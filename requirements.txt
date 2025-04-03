@@ -11,4 +11,6 @@ openai==1.68.2
 cors==1.0.1
 pydantic>=2.3.0
 pydantic-settings>=2.0.3
-email-validator==2.1.0.post1 
+email-validator==2.1.0.post1
+beautifulsoup4>=4.12.2
+requests>=2.31.0 
