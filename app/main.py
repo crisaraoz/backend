@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api.endpoints.transcription import router as transcription_router
 from .api.endpoints.summary import router as summary_router
+from .api.endpoints.docs import router as docs_router
 
 app = FastAPI(
     title="AI Dev Tools API",
-    description="API para transcripción y resumen de videos de YouTube",
+    description="API para transcripción y resumen de videos de YouTube, y procesamiento de documentación",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -42,4 +43,11 @@ app.include_router(
     summary_router,
     prefix="/api/v1/summary",
     tags=["summary"]
+)
+
+# Include docs router
+app.include_router(
+    docs_router,
+    prefix="/api/v1/docs",
+    tags=["documentation"]
 ) 
