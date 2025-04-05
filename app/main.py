@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from .api.v1.api import api_router
 from .api.endpoints.transcription import router as transcription_router
 from .api.endpoints.summary import router as summary_router
-from .api.endpoints.docs import router as docs_router
 
 app = FastAPI(
     title="AI Dev Tools API",
@@ -45,9 +45,5 @@ app.include_router(
     tags=["summary"]
 )
 
-# Include docs router
-app.include_router(
-    docs_router,
-    prefix="/api/v1/docs",
-    tags=["documentation"]
-) 
+# Include new v1 API router (contains docs endpoints)
+app.include_router(api_router, prefix="/api/v1") 
